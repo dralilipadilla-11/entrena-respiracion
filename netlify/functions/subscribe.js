@@ -1,6 +1,6 @@
 import { getStore, connectLambda } from "@netlify/blobs";
+import { sendToMailerLite } from "../lib/mailerlite.js";
 
-const MAILERLITE="https://connect.mailerlite.com/api";
 const WA="https://chat.whatsapp.com/BC3ixtMLLaRFp2lNQ1HdFk";
 
 // Cada registro se guarda primero en Netlify Blobs (store "registros") y después
@@ -9,6 +9,7 @@ export const handler=async(event)=>{
   if(event.httpMethod!=="POST")return{statusCode:405};
   let b;try{b=JSON.parse(event.body);}catch{return{statusCode:400};}
   const{name="",email="",phone="",lada="+52"}=b;
+  if(!String(email).includes("@")&&!String(phone).replace(/\D/g,""))return{statusCode:400,body:JSON.stringify({success:false})};
   const wa=`${lada}${phone}`.replace(/\s/g,"");
   const em=(email&&email.includes("@"))?email.toLowerCase().trim():`wa${phone.replace(/\D/g,"")}@respira21.noemail`;
   const record={email:em,name:name.trim(),phone:wa,fecha:new Date().toISOString(),ml_ok:false,ml_error:null};
@@ -19,18 +20,9 @@ export const handler=async(event)=>{
   catch(e){store=null;console.error("Blobs error:",e.message);}
 
   try{
-    const KEY=process.env.MAILERLITE_API_KEY;
-    if(!KEY)throw new Error("MAILERLITE_API_KEY no configurada");
-    const h={"Content-Type":"application/json","Authorization":`Bearer ${KEY}`,"Accept":"application/json"};
-    const gr=await fetch(`${MAILERLITE}/groups?filter[name]=RESPIRA&limit=25`,{headers:h});
-    const gd=await gr.json();
-    const grp=gd?.data?.find(g=>g.name==="RESPIRA 21"||g.name==="RESPIRA21");
-    const payload={email:em,status:"active",fields:{name:record.name,last_name:"",phone:wa}};
-    if(grp?.id)payload.groups=[grp.id];
-    const sr=await fetch(`${MAILERLITE}/subscribers`,{method:"POST",headers:h,body:JSON.stringify(payload)});
-    if(!sr.ok)throw new Error(`${sr.status} ${(await sr.text()).slice(0,500)}`);
+    await sendToMailerLite(record);
     record.ml_ok=true;
-    console.log("Added:",em,"group:",grp?.id);
+    console.log("Added:",em);
   }catch(e){record.ml_error=e.message;console.error("ML error:",e.message);}
 
   if(store){try{await store.setJSON(key,record);}catch(e){console.error("Blobs update error:",e.message);}}
