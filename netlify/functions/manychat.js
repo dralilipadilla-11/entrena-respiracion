@@ -13,7 +13,7 @@ const GUIAS={
 const GRUPOS={
   adulto:"https://chat.whatsapp.com/BC3ixtMLLaRFp2lNQ1HdFk",
   papa:"https://chat.whatsapp.com/E0dbnTGLvwm8tkBNOBm7mt",
-  profesional:"https://chat.whatsapp.com/L3XaABeR7y489sFOiJErP6",
+  profesional:"https://chat.whatsapp.com/BC3ixtMLLaRFp2lNQ1HdFk", // Aliados SER aún no abre
 };
 function recursos(palabra,rol){
   if(palabra==="RESPIRA")return{guia:rol==="papa"?GUIAS.mio_ninos:GUIAS.mio_adultos,grupo:GRUPOS[rol],app:"https://respiragym.netlify.app"};
