@@ -16,7 +16,7 @@ const GRUPOS={
   profesional:"https://chat.whatsapp.com/BC3ixtMLLaRFp2lNQ1HdFk", // Aliados SER aún no abre
 };
 function recursos(palabra,rol){
-  if(palabra==="RESPIRA")return{guia:rol==="papa"?GUIAS.mio_ninos:GUIAS.mio_adultos,grupo:GRUPOS[rol],app:"https://respiragym.netlify.app"};
+  if(palabra==="RESPIRA"||palabra==="EJERCICIOS")return{guia:rol==="papa"?GUIAS.mio_ninos:GUIAS.mio_adultos,grupo:GRUPOS[rol],app:"https://respiragym.netlify.app"};
   return{guia:GUIAS.entrena,grupo:GRUPOS[rol],app:"https://entrena-respiracion.netlify.app"};
 }
 const QUIZ="https://quiz-escueladesueno.netlify.app";
@@ -35,7 +35,7 @@ export const handler=async(event)=>{
   const email=valor(b.email).toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return json(400,{ok:false,error:"email"});
   const rol=ROLES_MC[valor(b.rol)]?valor(b.rol):"adulto";
-  const record={email,name:valor(b.nombre),rol,canal:valor(b.canal)||"instagram",palabra:valor(b.palabra).toUpperCase(),
+  const record={email,name:valor(b.nombre),rol,canal:valor(b.canal)||"instagram",palabra:valor(b.palabra).toUpperCase()||"ENTRENA", // la Quick Automation de ENTRENA no puede llenar ser_palabra
     manychat_id:valor(b.subscriber_id),fuente:"manychat",fecha:new Date().toISOString(),ml_ok:false,ml_error:null};
   const key=`${record.fecha.slice(0,10)}/${email}`;
 
