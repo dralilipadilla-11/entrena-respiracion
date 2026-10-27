@@ -3,13 +3,22 @@ import { sendToMailerLite, ROLES_MC } from "../lib/mailerlite.js";
 
 // Recibe el "External Request" de ManyChat cuando alguien deja su correo en el DM.
 // Igual que subscribe.js: primero Blobs (store "registros"), después MailerLite; reintentar.js reenvía lo que falle.
-// La respuesta trae las ligas para que ManyChat las muestre en el DM según el rol.
-const RECURSOS={
-  adulto:{guia:"https://entrena-respiracion.netlify.app/guia-entrena-tu-respiracion.pdf",grupo:"https://chat.whatsapp.com/BC3ixtMLLaRFp2lNQ1HdFk"},
-  papa:{guia:"https://respiragym.netlify.app/guia-miofuncional-ninos.pdf",grupo:"https://chat.whatsapp.com/E0dbnTGLvwm8tkBNOBm7mt"},
-  profesional:{guia:"https://entrena-respiracion.netlify.app/guia-entrena-tu-respiracion.pdf",grupo:"https://chat.whatsapp.com/L3XaABeR7y489sFOiJErP6"},
+// La respuesta trae las ligas para que ManyChat las muestre en el DM según la palabra clave y el rol.
+// RESPIRA = RespiraGym (miofuncional, con guía de niños); ENTRENA y el resto = Entrena tu Respiración.
+const GUIAS={
+  entrena:"https://entrena-respiracion.netlify.app/guia-entrena-tu-respiracion.pdf",
+  mio_adultos:"https://respiragym.netlify.app/guia-miofuncional-adultos.pdf",
+  mio_ninos:"https://respiragym.netlify.app/guia-miofuncional-ninos.pdf",
 };
-const APP="https://entrena-respiracion.netlify.app";
+const GRUPOS={
+  adulto:"https://chat.whatsapp.com/BC3ixtMLLaRFp2lNQ1HdFk",
+  papa:"https://chat.whatsapp.com/E0dbnTGLvwm8tkBNOBm7mt",
+  profesional:"https://chat.whatsapp.com/L3XaABeR7y489sFOiJErP6",
+};
+function recursos(palabra,rol){
+  if(palabra==="RESPIRA")return{guia:rol==="papa"?GUIAS.mio_ninos:GUIAS.mio_adultos,grupo:GRUPOS[rol],app:"https://respiragym.netlify.app"};
+  return{guia:GUIAS.entrena,grupo:GRUPOS[rol],app:"https://entrena-respiracion.netlify.app"};
+}
 const QUIZ="https://quiz-escueladesueno.netlify.app";
 
 const json=(statusCode,body)=>({statusCode,headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
@@ -38,6 +47,6 @@ export const handler=async(event)=>{
   catch(e){record.ml_error=e.message;console.error("ML error:",e.message);}
 
   if(store){try{await store.setJSON(key,record);}catch(e){console.error("Blobs update error:",e.message);}}
-  const r=RECURSOS[rol];
-  return json(200,{ok:true,guia_url:r.guia,grupo_url:r.grupo,app_url:APP,quiz_url:QUIZ});
+  const r=recursos(record.palabra,rol);
+  return json(200,{ok:true,guia_url:r.guia,grupo_url:r.grupo,app_url:r.app,quiz_url:QUIZ});
 };
